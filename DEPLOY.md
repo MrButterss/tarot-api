@@ -61,7 +61,7 @@ git init
 git add .
 git commit -m "Initial commit - Tarot API"
 git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/tarot-api.git
+git remote add origin https://github.com/MrButterss/tarot-api.git
 git push -u origin main
 ```
 
