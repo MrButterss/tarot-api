@@ -75,7 +75,7 @@ function buildFlexMessage(card, isReversed, category) {
         contents: [
           {
             type: 'text',
-            text: card.card_name_th,
+            text: card.card_name_en,
             color: COLORS.text,
             size: 'xl',
             weight: 'bold',
@@ -83,7 +83,7 @@ function buildFlexMessage(card, isReversed, category) {
           },
           {
             type: 'text',
-            text: `${card.card_name_en} • ${card.arcana}`,
+            text: card.arcana,
             color: COLORS.muted,
             size: 'xs',
             wrap: true,
