@@ -45,7 +45,6 @@ function buildFlexMessage(card, isReversed, category) {
       styles: {
         header: { backgroundColor: COLORS.panel },
         body: { backgroundColor: COLORS.background },
-        footer: { backgroundColor: COLORS.panel },
       },
       header: {
         type: 'box',
@@ -112,27 +111,12 @@ function buildFlexMessage(card, isReversed, category) {
             type: 'text',
             text: meaning,
             color: COLORS.text,
-            size: 'sm',
+            size: 'lg',
             wrap: true,
             margin: 'md',
           },
         ],
         paddingAll: '20px',
-      },
-      footer: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'text',
-            text: 'พิมพ์ "เปิดไพ่" เพื่อดูดวงอีกครั้ง',
-            color: COLORS.muted,
-            size: 'xxs',
-            align: 'center',
-            wrap: true,
-          },
-        ],
-        paddingAll: '12px',
       },
     },
   };
