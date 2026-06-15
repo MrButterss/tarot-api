@@ -1,0 +1,9 @@
+{
+  "name": "tarot-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tarot card API for LINE OA RxSU38 - returns a random Flex Message tarot reading",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
