@@ -111,7 +111,7 @@ function buildFlexMessage(card, isReversed, category) {
             type: 'text',
             text: meaning,
             color: COLORS.text,
-            size: 'xl',
+            size: 'md',
             wrap: true,
             margin: 'md',
           },
