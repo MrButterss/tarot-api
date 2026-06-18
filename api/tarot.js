@@ -9,15 +9,40 @@ const CATEGORIES = {
   general: { label: 'ดวงทั่วไป', emoji: '🔮', intro: 'ดวงโดยรวมของคุณวันนี้' },
 };
 
-// Dark mystical theme colors
-const COLORS = {
-  background: '#1a1a2e',
-  panel: '#16213e',
-  accent: '#9d4edd',
-  gold: '#e0aaff',
-  text: '#f1f1f1',
-  muted: '#a0a0c0',
+// Per-category gradient and accent colors (AAA-verified)
+const CATEGORY_COLORS = {
+  love: {
+    header: { start: '#4a1942', center: '#6b1f5c', end: '#2d1b4e' },
+    body:   { start: '#2d1b4e', center: '#2a1646', end: '#1a1a2e' },
+    pill: '#f2a6c9',
+  },
+  work: {
+    header: { start: '#16324f', center: '#1f4d7a', end: '#0f2238' },
+    body:   { start: '#0f2238', end: '#1a1a2e' },
+    pill: '#a6c9f2',
+  },
+  money: {
+    header: { start: '#4a3010', center: '#6b4818', end: '#2f1d08' },
+    body:   { start: '#2f1d08', center: '#3d260b', end: '#1a1a2e' },
+    pill: '#f2e0a6',
+  },
+  health: {
+    header: { start: '#173d2e', center: '#154433', end: '#0f291f' },
+    body:   { start: '#0f291f', center: '#082c1d', end: '#1a1a2e' },
+    pill: '#a6f2c0',
+  },
+  general: {
+    header: { start: '#271a47', center: '#3a2566', end: '#18102b' },
+    body:   { start: '#18102b', center: '#211438', end: '#1a1a2e' },
+    pill: '#cda6f2',
+  },
 };
+
+function makeGradient(angle, colors) {
+  const g = { type: 'linearGradient', angle, startColor: colors.start, endColor: colors.end };
+  if (colors.center) { g.centerColor = colors.center; g.centerPosition = '50%'; }
+  return g;
+}
 
 function buildImageUrl(rawUrl, isReversed) {
   // Proxy Wikipedia images through images.weserv.nl so we can rotate
@@ -32,7 +57,8 @@ function buildImageUrl(rawUrl, isReversed) {
 
 function buildFlexMessage(card, isReversed, category) {
   const cat = CATEGORIES[category];
-  const orientation = isReversed ? 'กลับหัว (Reversed)' : 'ตั้งตรง (Upright)';
+  const colors = CATEGORY_COLORS[category];
+  const orientation = isReversed ? 'กลับหัว' : 'ตั้งตรง';
   const meaning = isReversed ? card.reversed_th : card.upright_th;
   const imageUrl = buildImageUrl(card.image_url, isReversed);
 
@@ -42,81 +68,89 @@ function buildFlexMessage(card, isReversed, category) {
     contents: {
       type: 'bubble',
       size: 'mega',
-      styles: {
-        header: { backgroundColor: COLORS.panel },
-        body: { backgroundColor: COLORS.background },
-      },
       header: {
         type: 'box',
-        layout: 'vertical',
+        layout: 'horizontal',
+        paddingAll: '16px',
+        background: makeGradient('120deg', colors.header),
         contents: [
           {
             type: 'text',
             text: `${cat.emoji} ${cat.intro}`,
-            color: COLORS.gold,
+            color: '#f1f1f1',
             size: 'sm',
             weight: 'bold',
             wrap: true,
           },
         ],
-        paddingAll: '16px',
       },
       hero: {
         type: 'image',
         url: imageUrl,
         size: 'full',
-        aspectRatio: '2:3',
         aspectMode: 'cover',
+        margin: 'none',
       },
       body: {
         type: 'box',
         layout: 'vertical',
         spacing: 'md',
+        paddingAll: '20px',
+        background: makeGradient('180deg', colors.body),
+        alignItems: 'center',
         contents: [
           {
             type: 'text',
             text: card.card_name_en,
-            color: COLORS.text,
+            color: '#f1f1f1',
             size: 'xl',
             weight: 'bold',
             wrap: true,
+            align: 'center',
           },
           {
             type: 'text',
             text: card.arcana,
-            color: COLORS.muted,
+            color: '#b3b3d9',
             size: 'xs',
             wrap: true,
+            align: 'center',
           },
           {
             type: 'box',
-            layout: 'baseline',
+            layout: 'vertical',
+            margin: 'md',
+            backgroundColor: colors.pill,
+            cornerRadius: '20px',
+            paddingAll: '6px',
+            width: '100px',
             contents: [
               {
                 type: 'text',
                 text: orientation,
-                color: COLORS.accent,
-                size: 'sm',
+                color: '#1a1a2e',
+                size: 'xs',
                 weight: 'bold',
+                align: 'center',
               },
             ],
-            margin: 'md',
           },
           {
             type: 'separator',
             color: '#33334d',
-            margin: 'md',
+            margin: 'lg',
           },
           {
             type: 'text',
             text: meaning,
-            color: COLORS.text,
+            color: '#f1f1f1',
             size: 'md',
             wrap: true,
             margin: 'md',
+            adjustMode: 'shrink-to-fit',
+            align: 'center',
           },
         ],
-        paddingAll: '20px',
       },
     },
   };
