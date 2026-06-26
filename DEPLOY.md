@@ -1,178 +1,103 @@
-# Deploy Guide — Tarot API
+# Deploy to VPS
 
-This guide walks you through deploying the Tarot API to **Vercel** (free) so you get a
-public URL like `https://your-project.vercel.app/api/tarot?category=love` that the
-LINE OA bot (via Make.com) can call.
-
-No prior GitHub or Vercel account needed — we'll create both from scratch.
+This guide deploys the Express tarot API to the VPS at `147.50.228.39`, kept alive with PM2.
 
 ---
 
-## What you're deploying
+## One-time setup
 
-```
-tarot-api/
-├── api/tarot.js     <- the serverless function (the actual API)
-├── data/cards.json  <- 78 tarot cards (Thai meanings)
-├── package.json
-└── vercel.json
-```
+```bash
+# 1. SSH into VPS
+ssh user@147.50.228.39
 
-Once deployed, hitting:
+# 2. Check Node.js is installed (needs v22+ for node:sqlite)
+node -v
+# If missing, install via nvm:
+#   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+#   source ~/.bashrc
+#   nvm install 22 && nvm use 22
+
+# 3. Install PM2 globally
+npm install -g pm2
+
+# 4. Clone the repo (or copy the tarot-api folder to the VPS)
+git clone https://github.com/MrButterss/lineoa-rxsu38.git ~/lineoa-rxsu38
+cd ~/lineoa-rxsu38/tarot-api
+
+# 5. Install dependencies
+npm install
+
+# 6. Set up environment file
+cp .env.example .env
+nano .env
+# Set: PORT=3001
+# Set: DB_PATH=./db/tarot.db  (default is fine, no change needed)
+
+# 7. Seed the database
+npm run seed
 ```
-https://your-project.vercel.app/api/tarot?category=love
-```
-returns a LINE Flex Message JSON for a random card (love/work/money/health/general).
 
 ---
 
-## Step 1 — Create a GitHub account
+## Start the API
 
-1. Go to **https://github.com/signup**
-2. Sign up with your email, set a username and password
-3. Verify your email (check inbox for the confirmation link)
+```bash
+cd ~/lineoa-rxsu38/tarot-api
 
----
-
-## Step 2 — Create a new repository
-
-1. Once logged in, click the **+** icon (top right) → **New repository**
-2. Repository name: `tarot-api` (or any name you like)
-3. Set it to **Public** or **Private** — both work fine with Vercel's free plan
-4. **Do NOT** check "Add a README" — leave it empty
-5. Click **Create repository**
-6. Keep this page open — GitHub will show you a URL like:
-   `https://github.com/your-username/tarot-api.git`
-
----
-
-## Step 3 — Push this folder to GitHub
-
-Open a terminal (PowerShell) and navigate into the `tarot-api` folder:
-
-```powershell
-cd "d:\dev webapp\LineOA RxSU38\tarot-api"
+pm2 start src/index.js --name tarot-api
+pm2 save          # persist the process list across reboots
+pm2 startup       # generate and run the startup hook command it prints
 ```
 
-Then run these commands one by one:
+---
 
-```powershell
-git init
-git add .
-git commit -m "Initial commit - Tarot API"
-git branch -M main
-git remote add origin https://github.com/MrButterss/tarot-api.git
-git push -u origin main
+## Verify
+
+```bash
+curl http://localhost:3001/api/tarot?category=love
+# Should return LINE Flex JSON starting with: {"type":"flex","altText":"💕 ..."}
+
+curl http://localhost:3001/api/tarot?category=work
+curl http://localhost:3001/api/tarot?category=general
 ```
 
-> Replace `YOUR-USERNAME` with your actual GitHub username.
-> If `git` is not installed, download it from **https://git-scm.com/download/win**
-> and restart your terminal after installing.
-
-When you run `git push`, a browser window may open asking you to log in to
-GitHub and authorize — sign in and approve.
-
-After this, refresh your GitHub repo page — you should see all the files
-(`api/`, `data/`, `package.json`, `vercel.json`).
-
 ---
 
-## Step 4 — Create a Vercel account
+## Update n8n
 
-1. Go to **https://vercel.com/signup**
-2. Choose **Continue with GitHub** — this links Vercel to your GitHub account
-   directly (recommended, makes deployment automatic)
-3. Authorize Vercel to access your GitHub account when prompted
-
----
-
-## Step 5 — Import and deploy the project
-
-1. On the Vercel dashboard, click **Add New...** → **Project**
-2. Find your `tarot-api` repository in the list and click **Import**
-3. Vercel will auto-detect the settings — you don't need to change anything:
-   - Framework Preset: **Other**
-   - Root Directory: `.` (leave as default)
-   - Build Command: (leave empty)
-   - Output Directory: (leave empty)
-4. Click **Deploy**
-5. Wait ~30-60 seconds. When done, you'll see "Congratulations!" with a
-   screenshot of your project and a URL like:
-   ```
-   https://tarot-api-xxxx.vercel.app
-   ```
-
----
-
-## Step 6 — Test the API
-
-Open your browser and go to:
-
+In the n8n workflow, find the HTTP Request node that calls the tarot API and change the URL from:
 ```
-https://tarot-api-xxxx.vercel.app/api/tarot?category=love
+https://project-qnhm7.vercel.app/api/tarot?category={{...}}
+```
+To:
+```
+http://147.50.228.39:3001/api/tarot?category={{...}}
 ```
 
-(replace `tarot-api-xxxx.vercel.app` with your actual Vercel URL)
+Test the n8n workflow manually before retiring the Vercel deployment.
 
-You should see a big JSON response starting with:
-```json
-{
-  "type": "flex",
-  "altText": "💕 ไพ่ทาโรต์: ...",
-  "contents": { ... }
-}
+---
+
+## Useful PM2 commands
+
+```bash
+pm2 status              # see if tarot-api is running
+pm2 logs tarot-api      # view live logs
+pm2 restart tarot-api   # restart after a code update
+pm2 stop tarot-api      # stop the process
+pm2 delete tarot-api    # remove from PM2 process list
 ```
 
-Try the other categories too:
-- `?category=work`
-- `?category=money`
-- `?category=health`
-- `?category=general`
-
-Refresh a few times — you should get a different random card each time.
-
 ---
 
-## Step 7 — Preview the Flex Message visually (optional)
+## Updating the API after a code change
 
-1. Copy the full JSON response from Step 6
-2. Go to **https://developers.line.biz/flex-simulator/**
-3. Paste the JSON in and click "Apply" — you'll see how it looks as a LINE message
-
----
-
-## Step 8 — Connect to the LINE OA via Make.com
-
-In your Make.com scenario:
-
-1. Add an **HTTP > Make a request** module
-2. URL: `https://tarot-api-xxxx.vercel.app/api/tarot?category=general`
-   (you can map `category` dynamically based on what the user typed)
-3. Method: `GET`
-4. Parse response: **Yes**
-5. Use the parsed JSON body directly as the `messages[0]` payload in the
-   LINE **Reply Message** / **Push Message** HTTP call
-   (the JSON returned is already a valid LINE Flex Message object)
-
-⚠️ Per project rules — **don't touch the active "LINE reply message" scenario
-without confirming with Kattiya first.** Test this in a separate/duplicate
-scenario before wiring it into production.
-
----
-
-## Updating the deployed API later
-
-Any time you edit files in `tarot-api/` and want to redeploy:
-
-```powershell
-cd "d:\dev webapp\LineOA RxSU38\tarot-api"
-git add .
-git commit -m "Update tarot data/logic"
-git push
+```bash
+cd ~/lineoa-rxsu38/tarot-api
+git pull
+npm install   # only needed if package.json changed
+pm2 restart tarot-api
 ```
-
-Vercel automatically redeploys within ~30 seconds of every push to `main`.
-No need to repeat the import step.
 
 ---
 
@@ -180,8 +105,8 @@ No need to repeat the import step.
 
 | Problem | Fix |
 |---------|-----|
-| `git: command not found` | Install Git: https://git-scm.com/download/win, restart terminal |
-| Push asks for login repeatedly | Use GitHub Desktop (https://desktop.github.com/) as an alternative to command-line git |
-| Vercel deploy fails | Check the build log on Vercel — usually a typo in `vercel.json` or `package.json` |
-| API returns 500 error | Check Vercel dashboard → your project → **Logs** for the error message |
-| Images don't load in LINE | Make sure the image URL in the response starts with `https://images.weserv.nl/...` — LINE requires HTTPS images |
+| `node:sqlite` not found | Ensure Node.js v22+. Run `node -v` and upgrade if needed. |
+| `No cards found in database` | Run `npm run seed` from the `tarot-api` directory. |
+| Port 3001 already in use | Run `pm2 status` — another pm2 process may be holding the port. |
+| curl returns `Connection refused` | Run `pm2 status` — tarot-api may have crashed. Check `pm2 logs tarot-api`. |
+| Images not loading in LINE | Confirm `image_url` in the DB starts with `https://`. The weserv proxy requires a valid upstream URL. |

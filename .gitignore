@@ -1,0 +1,13 @@
+# Environment secrets
+.env
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# Dependencies
+node_modules/
+
+# Vercel output
+.vercel
