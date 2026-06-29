@@ -97,8 +97,10 @@ tarot-api/
 ├── db/
 │   ├── schema.sql          # Table definitions
 │   ├── seed_cards.js       # Seed script (reads data/cards.json)
+│   ├── seed_interpretations.js  # Seed script (reads data/interpretations/<category>.json)
 │   └── tarot.db            # SQLite database (gitignored)
-└── data/cards.json         # Source of truth for card data
+├── data/cards.json         # Source of truth for card data
+└── data/interpretations/   # Category-specific upright/reversed text (love, work, money, health, general)
 ```
 
 ## Slices
@@ -107,4 +109,4 @@ tarot-api/
 |-------|--------|------|
 | 1 | Done | Migrate cards.json → SQLite DB |
 | 2 | Done | Express API replacing Vercel serverless |
-| 3 | Planned | Category-personalized fortune text |
+| 3 | Done | Category-personalized fortune text |
